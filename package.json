@@ -1,0 +1,8 @@
+{
+  "name": "blurredfuture-store",
+  "private": true,
+  "dependencies": {
+    "@upstash/redis": "^1.28.0",
+    "resend": "^3.0.0"
+  }
+}

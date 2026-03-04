@@ -464,11 +464,45 @@ function collectCheckoutData() {
     };
 }
 
-document.getElementById("checkoutCrypto").addEventListener("click", () => {
+document.getElementById("checkoutCrypto").addEventListener("click", async () => {
     const data = collectCheckoutData(); if (!data) return;
     checkoutData = data;
-    sendOrderEmail(data, "Crypto (ETH/USDC)");
-    closeCheckoutModal(); openCryptoModal();
+
+    const btn = document.getElementById("checkoutCrypto");
+    const original = btn.innerHTML;
+    btn.innerHTML = "CREATING ORDER...";
+    btn.disabled = true;
+
+    try {
+        const res = await fetch("/api/order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                customer: {
+                    firstName: data.firstName, lastName: data.lastName,
+                    name: data.name, email: data.email,
+                    phone: data.phone, pickup: data.pickupLabel
+                },
+                items: cart.map(item => ({
+                    name: item.product.name, size: item.size,
+                    qty: item.qty, price: item.product.price
+                })),
+                totalUSD: getProductsTotal()
+            })
+        });
+        const orderData = await res.json();
+        if (!res.ok) throw new Error(orderData.error || "Order failed");
+
+        closeCheckoutModal();
+        openCryptoModal(orderData);
+        startPaymentPolling(orderData.orderId);
+    } catch (err) {
+        console.error("Order error:", err);
+        showToast("Error creating order. Please try again.");
+    } finally {
+        btn.innerHTML = original;
+        btn.disabled = false;
+    }
 });
 
 document.getElementById("checkoutMP").addEventListener("click", () => {
@@ -478,7 +512,7 @@ document.getElementById("checkoutMP").addEventListener("click", () => {
     closeCheckoutModal(); openMPModal();
 });
 
-// ===== EMAIL =====
+// ===== EMAIL (MercadoPago only — crypto uses server-side Resend) =====
 function sendOrderEmail(customerData, paymentMethod) {
     const total = getProductsTotal();
     const itemsList = cart.map(item =>
@@ -497,16 +531,69 @@ function sendOrderEmail(customerData, paymentMethod) {
 }
 
 // ===== CRYPTO =====
-function openCryptoModal() {
-    const total = getProductsTotal();
-    document.getElementById("cryptoAmount").textContent = `$${total} USD`;
-    document.getElementById("cryptoAddress").textContent = CRYPTO_WALLET;
+let paymentPollInterval = null;
+let currentOrderData = null;
+
+function openCryptoModal(orderData) {
+    currentOrderData = orderData;
+
+    // Order reference
+    document.getElementById("cryptoOrderId").textContent = orderData.orderId;
+
+    // Order summary
+    const summaryEl = document.getElementById("cryptoSummary");
+    summaryEl.innerHTML = cart.map(item =>
+        `<div class="crypto-summary-item">
+            <span>${item.product.name} (${item.size}) x${item.qty}</span>
+            <span>$${item.product.price * item.qty}</span>
+        </div>`
+    ).join("") + `<div class="crypto-summary-item" style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px;color:white;font-weight:600;">
+        <span>TOTAL</span><span>$${getProductsTotal()}</span>
+    </div>`;
+
+    // Default to ETH tab
+    updateCryptoAmount("eth");
+    document.querySelectorAll(".crypto-tab").forEach(t => t.classList.toggle("active", t.dataset.token === "eth"));
+
+    // Wallet address
+    document.getElementById("cryptoAddress").textContent = orderData.wallet || CRYPTO_WALLET;
+
+    // Reset status
+    document.getElementById("cryptoStatus").innerHTML =
+        '<div class="crypto-status-dot pending"></div><span>Waiting for payment...</span>';
+
     document.getElementById("cryptoModalOverlay").classList.add("open");
     document.body.style.overflow = "hidden";
 }
+
+function updateCryptoAmount(token) {
+    if (!currentOrderData) return;
+    const amountEl = document.getElementById("cryptoExactAmount");
+    const equivEl = document.getElementById("cryptoUsdEquiv");
+    const total = getProductsTotal();
+
+    if (token === "eth") {
+        amountEl.textContent = `${currentOrderData.ethAmount} ETH`;
+        equivEl.textContent = `≈ $${total} USD (1 ETH = $${Math.round(currentOrderData.ethPrice)})`;
+    } else {
+        amountEl.textContent = `${currentOrderData.usdcAmount} USDC`;
+        equivEl.textContent = `= $${currentOrderData.usdcAmount} USD`;
+    }
+}
+
+// Token tab switching
+document.querySelectorAll(".crypto-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+        document.querySelectorAll(".crypto-tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        updateCryptoAmount(tab.dataset.token);
+    });
+});
+
 function closeCryptoModal() {
     document.getElementById("cryptoModalOverlay").classList.remove("open");
     document.body.style.overflow = "";
+    if (paymentPollInterval) { clearInterval(paymentPollInterval); paymentPollInterval = null; }
 }
 
 document.getElementById("cryptoModalClose").addEventListener("click", closeCryptoModal);
@@ -515,10 +602,39 @@ document.getElementById("cryptoModalOverlay").addEventListener("click", (e) => {
 });
 
 document.getElementById("copyAddress").addEventListener("click", () => {
-    navigator.clipboard.writeText(CRYPTO_WALLET)
+    const addr = document.getElementById("cryptoAddress").textContent;
+    navigator.clipboard.writeText(addr)
         .then(() => showToast("Address copied!"))
         .catch(() => showToast("Couldn't copy — select manually"));
 });
+
+// Poll for payment confirmation
+function startPaymentPolling(orderId) {
+    if (paymentPollInterval) clearInterval(paymentPollInterval);
+
+    paymentPollInterval = setInterval(async () => {
+        try {
+            const res = await fetch(`/api/order/status?id=${orderId}`);
+            const data = await res.json();
+
+            if (data.status === "confirmed") {
+                clearInterval(paymentPollInterval);
+                paymentPollInterval = null;
+
+                // Update status to confirmed
+                document.getElementById("cryptoStatus").innerHTML =
+                    '<div class="crypto-status-dot confirmed"></div><span>Payment confirmed! Check your email.</span>';
+                showToast("Payment confirmed! 🎉");
+
+                // Clear cart
+                cart = [];
+                updateCartUI();
+            }
+        } catch (e) {
+            console.error("Poll error:", e);
+        }
+    }, 10000); // every 10 seconds
+}
 
 // ===== MERCADOPAGO =====
 function openMPModal() {

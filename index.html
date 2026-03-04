@@ -264,23 +264,75 @@
     <div class="modal-overlay" id="cryptoModalOverlay">
         <div class="modal crypto-modal" id="cryptoModal">
             <button class="modal-close" id="cryptoModalClose">&times;</button>
+
+            <!-- Order reference -->
+            <div class="crypto-order-ref">
+                <span class="crypto-order-label">ORDER</span>
+                <span class="crypto-order-id" id="cryptoOrderId">BFI-XXXX</span>
+            </div>
+
             <h2>PAY WITH CRYPTO</h2>
-            <p class="crypto-subtitle">Send ETH or USDC (Base/Ethereum) to the address below</p>
+            <p class="crypto-subtitle">Send the exact amount below to complete your order</p>
+
+            <!-- Order summary -->
+            <div class="crypto-summary" id="cryptoSummary"></div>
+
             <div class="crypto-address-box">
-                <p class="crypto-label">TOTAL</p>
-                <p class="crypto-amount" id="cryptoAmount">$0 USD</p>
-                <p class="crypto-label" style="margin-top:16px;">SEND TO</p>
+                <!-- Token tabs -->
+                <div class="crypto-tabs">
+                    <button class="crypto-tab active" data-token="eth">Ξ ETH</button>
+                    <button class="crypto-tab" data-token="usdc">USDC</button>
+                </div>
+
+                <div class="crypto-amount-section">
+                    <p class="crypto-label">SEND EXACTLY</p>
+                    <p class="crypto-amount" id="cryptoExactAmount">0.0000 ETH</p>
+                    <p class="crypto-usd-equiv" id="cryptoUsdEquiv">≈ $0 USD</p>
+                </div>
+
+                <p class="crypto-label" style="margin-top:16px;">TO THIS ADDRESS</p>
                 <div class="crypto-address">
                     <code id="cryptoAddress">0x356caBB78b3D6671571528B3aD64A3369eee264c</code>
                     <button class="copy-btn" id="copyAddress">COPY</button>
                 </div>
-                <p class="crypto-label" style="margin-top:16px;">ACCEPTED</p>
-                <div style="display:flex;gap:8px;margin-top:6px;">
-                    <span style="padding:6px 14px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-weight:600;">Ξ ETH</span>
-                    <span style="padding:6px 14px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-weight:600;">USDC</span>
+
+                <p class="crypto-label" style="margin-top:16px;">NETWORKS</p>
+                <div class="crypto-networks">
+                    <span class="crypto-network-badge">Ethereum</span>
+                    <span class="crypto-network-badge">Base</span>
                 </div>
             </div>
-            <p class="crypto-note">Send the equivalent in ETH or USDC on Ethereum or Base. After payment, you'll receive a confirmation email. DM us on Instagram if you need help.</p>
+
+            <!-- Payment status -->
+            <div class="crypto-status" id="cryptoStatus">
+                <div class="crypto-status-dot pending"></div>
+                <span>Waiting for payment...</span>
+            </div>
+
+            <!-- What happens next -->
+            <div class="crypto-steps">
+                <div class="crypto-step">
+                    <span class="crypto-step-num">1</span>
+                    <span>Send the exact amount shown above</span>
+                </div>
+                <div class="crypto-step">
+                    <span class="crypto-step-num">2</span>
+                    <span>We detect your payment automatically</span>
+                </div>
+                <div class="crypto-step">
+                    <span class="crypto-step-num">3</span>
+                    <span>Confirmation email sent to you</span>
+                </div>
+                <div class="crypto-step">
+                    <span class="crypto-step-num">4</span>
+                    <span>Pick up at Crecimiento Hub</span>
+                </div>
+            </div>
+
+            <!-- Trust -->
+            <div class="crypto-trust">
+                <p>Need help? DM us on <a href="https://instagram.com/blurredfuture_" target="_blank" rel="noopener">@blurredfuture_</a> or <a href="https://x.com/blurredfuture_" target="_blank" rel="noopener">X</a></p>
+            </div>
         </div>
     </div>
 

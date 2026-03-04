@@ -1,5 +1,8 @@
 .DS_Store
 .claude/
+node_modules/
+.env
+.env.local
 polymarket-bot/
 PNGS/
 tees/
