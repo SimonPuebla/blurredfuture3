@@ -22,15 +22,25 @@ function verifySignature(rawBody, signature, signingKey) {
   return signature === digest;
 }
 
+// Try all webhook signing keys (one per chain)
+function verifyAnySignature(rawBody, signature) {
+  const keys = [
+    process.env.ALCHEMY_WEBHOOK_KEY_BASE,
+    process.env.ALCHEMY_WEBHOOK_KEY_ETH,
+    process.env.ALCHEMY_WEBHOOK_KEY_SOLANA,
+    process.env.ALCHEMY_WEBHOOK_SIGNING_KEY, // legacy single-key fallback
+  ].filter(Boolean);
+
+  return keys.some((key) => verifySignature(rawBody, signature, key));
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
   const rawBody = await getRawBody(req);
   const signature = req.headers["x-alchemy-signature"];
 
-  if (
-    !verifySignature(rawBody, signature, process.env.ALCHEMY_WEBHOOK_SIGNING_KEY)
-  ) {
+  if (!verifyAnySignature(rawBody, signature)) {
     return res.status(401).json({ error: "Invalid signature" });
   }
 
@@ -45,7 +55,11 @@ export default async function handler(req, res) {
 
     const amount = parseFloat(activity.value);
     const asset = activity.asset || "ETH";
-    const token = asset === "USDC" ? "USDC" : asset === "ETH" ? "ETH" : asset;
+    // Normalize token names across chains
+    const token = asset === "USDC" ? "USDC"
+      : asset === "ETH" ? "ETH"
+      : asset === "SOL" ? "SOL"
+      : asset;
     const txHash = activity.hash;
 
     let matchedOrderId = null;
@@ -70,6 +84,17 @@ export default async function handler(req, res) {
     } else if (token === "USDC") {
       const rounded = parseFloat(amount.toFixed(2));
       matchedOrderId = await redis.get(`order:byusdc:${rounded}`);
+    } else if (token === "SOL") {
+      // SOL matching — scan pending orders for approximate SOL amount
+      const keys = await redis.keys("order:pending:*");
+      for (const key of keys) {
+        const raw = await redis.get(key);
+        const order = typeof raw === "string" ? JSON.parse(raw) : raw;
+        if (order.solAmount && Math.abs(order.solAmount - amount) < 0.001) {
+          matchedOrderId = order.orderId;
+          break;
+        }
+      }
     }
 
     if (matchedOrderId) {
