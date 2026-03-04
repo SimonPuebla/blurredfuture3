@@ -140,13 +140,13 @@
                 <span id="cartTotal">$0</span>
             </div>
             <div class="checkout-buttons">
-                <button class="checkout-btn stripe-btn" id="stripeCheckout">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-7.076-2.19l-.893 5.575C4.746 22.901 7.614 24 11.174 24c2.6 0 4.719-.67 6.22-1.91 1.627-1.347 2.449-3.317 2.449-5.724 0-4.116-2.507-5.829-5.867-7.216z"/></svg>
-                    Pay with Card
-                </button>
                 <button class="checkout-btn crypto-btn" id="cryptoCheckout">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.638 14.904c-1.602 6.43-8.113 10.34-14.542 8.736C2.67 22.05-1.244 15.525.362 9.105 1.962 2.67 8.475-1.243 14.9.358c6.43 1.605 10.342 8.115 8.738 14.546zm-6.35-4.613c.24-1.59-.974-2.45-2.64-3.03l.54-2.153-1.315-.33-.525 2.107c-.345-.087-.7-.169-1.053-.25l.53-2.12-1.313-.33-.54 2.153c-.286-.065-.567-.13-.84-.2l.001-.007-1.812-.452-.35 1.407s.975.224.955.238c.535.136.63.494.614.778l-.616 2.468c.037.01.085.024.138.047l-.14-.035-.864 3.463c-.065.163-.232.406-.607.313.013.02-.956-.239-.956-.239l-.652 1.514 1.71.427c.318.08.63.164.936.243l-.546 2.19 1.312.328.54-2.157c.36.098.708.188 1.05.273l-.537 2.141 1.313.33.546-2.183c2.245.425 3.932.254 4.64-1.774.57-1.637-.028-2.58-1.217-3.196.866-.199 1.52-.768 1.694-1.94z"/></svg>
-                    Pay with Crypto
+                    Pay with Crypto (ETH/USDC)
+                </button>
+                <button class="checkout-btn mp-btn" id="mpCheckout">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.94s4.18 1.36 4.18 3.85c0 1.89-1.44 2.98-3.12 3.19z"/></svg>
+                    Pay with MercadoPago (50/50)
                 </button>
             </div>
         </div>
@@ -182,23 +182,27 @@
         </div>
     </div>
 
-    <!-- Checkout Modal (Address + Delivery) -->
+    <!-- Checkout Modal (Customer Info) -->
     <div class="modal-overlay" id="checkoutModalOverlay">
         <div class="modal checkout-modal" id="checkoutModal">
             <button class="modal-close" id="checkoutModalClose">&times;</button>
-            <h2>SHIPPING INFO</h2>
-            <p class="checkout-subtitle">Delivery within Argentina only</p>
+            <h2>YOUR INFO</h2>
+            <p class="checkout-subtitle">Fill in your details to complete the order</p>
 
             <form id="checkoutForm" class="checkout-form">
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Full Name *</label>
-                        <input type="text" id="custName" required placeholder="Juan Perez">
+                        <label>First Name *</label>
+                        <input type="text" id="custFirstName" required placeholder="Juan">
                     </div>
                     <div class="form-group">
-                        <label>Email *</label>
-                        <input type="email" id="custEmail" required placeholder="you@email.com">
+                        <label>Last Name *</label>
+                        <input type="text" id="custLastName" required placeholder="Perez">
                     </div>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="custEmail" required placeholder="you@email.com">
                 </div>
                 <div class="form-group">
                     <label>Phone (WhatsApp) *</label>
@@ -206,97 +210,35 @@
                 </div>
 
                 <div class="delivery-options">
-                    <label class="delivery-label">DELIVERY METHOD</label>
+                    <label class="delivery-label">PICKUP LOCATION</label>
 
-                    <label class="delivery-option active" data-delivery="pickup">
-                        <input type="radio" name="delivery" value="pickup" checked>
+                    <label class="delivery-option active" data-delivery="crecimiento">
+                        <input type="radio" name="pickup" value="crecimiento" checked>
                         <div class="delivery-option-inner">
                             <div class="delivery-option-info">
-                                <span class="delivery-option-title">Pickup at Crecimiento Hub</span>
+                                <span class="delivery-option-title">Crecimiento Hub</span>
                                 <span class="delivery-option-desc">Collect in person</span>
                             </div>
-                            <span class="delivery-option-price">$3 USD</span>
+                            <span class="delivery-option-price">FREE</span>
                         </div>
                     </label>
 
-                    <label class="delivery-option" data-delivery="caba">
-                        <input type="radio" name="delivery" value="caba">
+                    <label class="delivery-option disabled" data-delivery="other">
+                        <input type="radio" name="pickup" value="other" disabled>
                         <div class="delivery-option-inner">
                             <div class="delivery-option-info">
-                                <span class="delivery-option-title">CABA & GBA</span>
-                                <span class="delivery-option-desc">Buenos Aires metro area</span>
+                                <span class="delivery-option-title">Other Locations</span>
+                                <span class="delivery-option-desc">Coming soon</span>
                             </div>
-                            <span class="delivery-option-price">$7 USD</span>
+                            <span class="delivery-option-price">TBD</span>
                         </div>
                     </label>
-
-                    <label class="delivery-option" data-delivery="interior">
-                        <input type="radio" name="delivery" value="interior">
-                        <div class="delivery-option-inner">
-                            <div class="delivery-option-info">
-                                <span class="delivery-option-title">Interior Argentina</span>
-                                <span class="delivery-option-desc">Rest of the country</span>
-                            </div>
-                            <span class="delivery-option-price">$12 USD</span>
-                        </div>
-                    </label>
-                </div>
-
-                <div class="form-group" id="addressGroup">
-                    <label>Shipping Address *</label>
-                    <input type="text" id="custAddress" placeholder="Street, Number, Floor/Apt">
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group" id="cityGroup">
-                        <label>City *</label>
-                        <input type="text" id="custCity" placeholder="Mendoza">
-                    </div>
-                    <div class="form-group" id="zipGroup">
-                        <label>ZIP Code *</label>
-                        <input type="text" id="custZip" placeholder="5500">
-                    </div>
-                </div>
-
-                <div class="form-group" id="provinceGroup">
-                    <label>Province *</label>
-                    <select id="custProvince">
-                        <option value="">Select province...</option>
-                        <option value="Buenos Aires">Buenos Aires</option>
-                        <option value="CABA">CABA</option>
-                        <option value="Catamarca">Catamarca</option>
-                        <option value="Chaco">Chaco</option>
-                        <option value="Chubut">Chubut</option>
-                        <option value="Córdoba">Córdoba</option>
-                        <option value="Corrientes">Corrientes</option>
-                        <option value="Entre Ríos">Entre Ríos</option>
-                        <option value="Formosa">Formosa</option>
-                        <option value="Jujuy">Jujuy</option>
-                        <option value="La Pampa">La Pampa</option>
-                        <option value="La Rioja">La Rioja</option>
-                        <option value="Mendoza">Mendoza</option>
-                        <option value="Misiones">Misiones</option>
-                        <option value="Neuquén">Neuquén</option>
-                        <option value="Río Negro">Río Negro</option>
-                        <option value="Salta">Salta</option>
-                        <option value="San Juan">San Juan</option>
-                        <option value="San Luis">San Luis</option>
-                        <option value="Santa Cruz">Santa Cruz</option>
-                        <option value="Santa Fe">Santa Fe</option>
-                        <option value="Santiago del Estero">Santiago del Estero</option>
-                        <option value="Tierra del Fuego">Tierra del Fuego</option>
-                        <option value="Tucumán">Tucumán</option>
-                    </select>
                 </div>
 
                 <div class="checkout-summary">
                     <div class="summary-row">
                         <span>Products</span>
                         <span id="summaryProducts">$0</span>
-                    </div>
-                    <div class="summary-row">
-                        <span>Shipping</span>
-                        <span id="summaryShipping">$3</span>
                     </div>
                     <div class="summary-row summary-total">
                         <span>TOTAL</span>
@@ -305,13 +247,13 @@
                 </div>
 
                 <div class="checkout-pay-buttons">
-                    <button type="button" class="checkout-btn stripe-btn" id="checkoutStripe">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-7.076-2.19l-.893 5.575C4.746 22.901 7.614 24 11.174 24c2.6 0 4.719-.67 6.22-1.91 1.627-1.347 2.449-3.317 2.449-5.724 0-4.116-2.507-5.829-5.867-7.216z"/></svg>
-                        PAY WITH CARD
-                    </button>
                     <button type="button" class="checkout-btn crypto-btn" id="checkoutCrypto">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.638 14.904c-1.602 6.43-8.113 10.34-14.542 8.736C2.67 22.05-1.244 15.525.362 9.105 1.962 2.67 8.475-1.243 14.9.358c6.43 1.605 10.342 8.115 8.738 14.546zm-6.35-4.613c.24-1.59-.974-2.45-2.64-3.03l.54-2.153-1.315-.33-.525 2.107c-.345-.087-.7-.169-1.053-.25l.53-2.12-1.313-.33-.54 2.153c-.286-.065-.567-.13-.84-.2l.001-.007-1.812-.452-.35 1.407s.975.224.955.238c.535.136.63.494.614.778l-.616 2.468c.037.01.085.024.138.047l-.14-.035-.864 3.463c-.065.163-.232.406-.607.313.013.02-.956-.239-.956-.239l-.652 1.514 1.71.427c.318.08.63.164.936.243l-.546 2.19 1.312.328.54-2.157c.36.098.708.188 1.05.273l-.537 2.141 1.313.33.546-2.183c2.245.425 3.932.254 4.64-1.774.57-1.637-.028-2.58-1.217-3.196.866-.199 1.52-.768 1.694-1.94z"/></svg>
                         PAY WITH CRYPTO
+                    </button>
+                    <button type="button" class="checkout-btn mp-btn" id="checkoutMP">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.94s4.18 1.36 4.18 3.85c0 1.89-1.44 2.98-3.12 3.19z"/></svg>
+                        PAY WITH MERCADOPAGO (50/50)
                     </button>
                 </div>
             </form>
@@ -323,28 +265,56 @@
         <div class="modal crypto-modal" id="cryptoModal">
             <button class="modal-close" id="cryptoModalClose">&times;</button>
             <h2>PAY WITH CRYPTO</h2>
-            <p class="crypto-subtitle">Send the exact amount to the address below</p>
-            <div class="crypto-options">
-                <button class="crypto-option active" data-chain="eth">
-                    <span class="crypto-icon">Ξ</span> ETH
-                </button>
-                <button class="crypto-option" data-chain="btc">
-                    <span class="crypto-icon">₿</span> BTC
-                </button>
-                <button class="crypto-option" data-chain="sol">
-                    <span class="crypto-icon">◎</span> SOL
-                </button>
-            </div>
+            <p class="crypto-subtitle">Send ETH or USDC (Base/Ethereum) to the address below</p>
             <div class="crypto-address-box">
-                <p class="crypto-label">AMOUNT</p>
-                <p class="crypto-amount" id="cryptoAmount">Calculating...</p>
+                <p class="crypto-label">TOTAL</p>
+                <p class="crypto-amount" id="cryptoAmount">$0 USD</p>
                 <p class="crypto-label" style="margin-top:16px;">SEND TO</p>
                 <div class="crypto-address">
-                    <code id="cryptoAddress">0x...</code>
+                    <code id="cryptoAddress">0x356caBB78b3D6671571528B3aD64A3369eee264c</code>
                     <button class="copy-btn" id="copyAddress">COPY</button>
                 </div>
+                <p class="crypto-label" style="margin-top:16px;">ACCEPTED</p>
+                <div style="display:flex;gap:8px;margin-top:6px;">
+                    <span style="padding:6px 14px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-weight:600;">Ξ ETH</span>
+                    <span style="padding:6px 14px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-weight:600;">USDC</span>
+                </div>
             </div>
-            <p class="crypto-note">After payment, you'll receive a confirmation email. Contact us on Instagram if you need help.</p>
+            <p class="crypto-note">Send the equivalent in ETH or USDC on Ethereum or Base. After payment, you'll receive a confirmation email. DM us on Instagram if you need help.</p>
+        </div>
+    </div>
+
+    <!-- MercadoPago Modal -->
+    <div class="modal-overlay" id="mpModalOverlay">
+        <div class="modal crypto-modal" id="mpModal">
+            <button class="modal-close" id="mpModalClose">&times;</button>
+            <h2>MERCADOPAGO</h2>
+            <p class="crypto-subtitle">Pay 50% now, 50% at pickup</p>
+            <div class="crypto-address-box">
+                <div style="display:flex;justify-content:space-between;margin-bottom:16px;">
+                    <div>
+                        <p class="crypto-label">TOTAL</p>
+                        <p class="crypto-amount" id="mpTotal" style="font-size:22px;">$0</p>
+                    </div>
+                    <div style="text-align:right;">
+                        <p class="crypto-label">PAY NOW (50%)</p>
+                        <p class="crypto-amount" id="mpHalf" style="font-size:22px;color:#00b4d8;">$0</p>
+                    </div>
+                </div>
+                <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:14px;margin-bottom:12px;">
+                    <p style="font-size:13px;color:var(--text-muted);line-height:1.6;">
+                        <strong style="color:white;">How it works:</strong><br>
+                        1. Pay 50% now via MercadoPago<br>
+                        2. Pick up your order at Crecimiento Hub<br>
+                        3. Pay the remaining 50% at pickup
+                    </p>
+                </div>
+                <a href="#" id="mpPayLink" class="checkout-btn mp-btn" target="_blank" rel="noopener" style="display:flex;text-decoration:none;color:white;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.94s4.18 1.36 4.18 3.85c0 1.89-1.44 2.98-3.12 3.19z"/></svg>
+                    PAY 50% NOW
+                </a>
+            </div>
+            <p class="crypto-note">You'll receive a confirmation email with your order details. Bring it to Crecimiento Hub to pick up and pay the rest.</p>
         </div>
     </div>
 

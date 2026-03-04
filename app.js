@@ -74,15 +74,10 @@ const PRODUCTS = [
     }
 ];
 
-const DELIVERY_COSTS = { pickup: 3, caba: 7, interior: 12 };
+const CRYPTO_WALLET = "0x356caBB78b3D6671571528B3aD64A3369eee264c";
 
-const CRYPTO_ADDRESSES = {
-    eth: "0xYOUR_ETH_ADDRESS_HERE",
-    btc: "bc1YOUR_BTC_ADDRESS_HERE",
-    sol: "YOUR_SOL_ADDRESS_HERE"
-};
-
-const STRIPE_KEY = "pk_test_REPLACE_WITH_YOUR_STRIPE_KEY";
+// MercadoPago payment link — replace with your actual link from MP dashboard
+const MP_PAYMENT_BASE = "YOUR_MERCADOPAGO_LINK";
 
 const EMAILJS_PUBLIC_KEY = "YOUR_EMAILJS_PUBLIC_KEY";
 const EMAILJS_SERVICE_ID = "YOUR_SERVICE_ID";
@@ -91,7 +86,7 @@ const OWNER_EMAIL = "simopuebla@gmail.com";
 
 let cart = [];
 let selectedSize = "M";
-let selectedDelivery = "pickup";
+let selectedPickup = "crecimiento";
 let currentProduct = null;
 let checkoutData = null;
 
@@ -413,21 +408,17 @@ document.getElementById("modalOverlay").addEventListener("click", (e) => {
 document.getElementById("addToCartBtn").addEventListener("click", addToCart);
 
 // ===== CHECKOUT FLOW =====
-document.getElementById("stripeCheckout").addEventListener("click", () => {
-    if (cart.length === 0) return;
-    closeCart(); openCheckoutModal("stripe");
-});
 document.getElementById("cryptoCheckout").addEventListener("click", () => {
     if (cart.length === 0) return;
-    closeCart(); openCheckoutModal("crypto");
+    closeCart(); openCheckoutModal();
+});
+document.getElementById("mpCheckout").addEventListener("click", () => {
+    if (cart.length === 0) return;
+    closeCart(); openCheckoutModal();
 });
 
-let pendingPaymentMethod = "stripe";
-
-function openCheckoutModal(paymentMethod) {
-    pendingPaymentMethod = paymentMethod;
-    selectedDelivery = "pickup";
-    updateDeliveryUI(); updateCheckoutSummary();
+function openCheckoutModal() {
+    updateCheckoutSummary();
     document.getElementById("checkoutModalOverlay").classList.add("open");
     document.body.style.overflow = "hidden";
 }
@@ -441,104 +432,81 @@ document.getElementById("checkoutModalOverlay").addEventListener("click", (e) =>
     if (e.target === document.getElementById("checkoutModalOverlay")) closeCheckoutModal();
 });
 
-document.querySelectorAll('.delivery-option input[name="delivery"]').forEach(radio => {
+// Pickup location selection (only Crecimiento Hub is active for now)
+document.querySelectorAll('.delivery-option input[name="pickup"]').forEach(radio => {
     radio.addEventListener("change", (e) => {
-        selectedDelivery = e.target.value;
-        updateDeliveryUI(); updateCheckoutSummary();
+        selectedPickup = e.target.value;
+        document.querySelectorAll(".delivery-option").forEach(opt => {
+            opt.classList.toggle("active", opt.querySelector("input").value === selectedPickup);
+        });
     });
 });
 
-function updateDeliveryUI() {
-    document.querySelectorAll(".delivery-option").forEach(opt => {
-        opt.classList.toggle("active", opt.querySelector("input").value === selectedDelivery);
-    });
-    const show = selectedDelivery !== "pickup";
-    document.getElementById("addressGroup").style.display = show ? "" : "none";
-    document.getElementById("cityGroup").parentElement.style.display = show ? "" : "none";
-    document.getElementById("provinceGroup").style.display = show ? "" : "none";
-    document.getElementById("custAddress").required = show;
-    document.getElementById("custCity").required = show;
-    document.getElementById("custZip").required = show;
-    document.getElementById("custProvince").required = show;
-}
-
 function updateCheckoutSummary() {
-    const p = getProductsTotal();
-    const s = DELIVERY_COSTS[selectedDelivery] || 3;
-    document.getElementById("summaryProducts").textContent = `$${p}`;
-    document.getElementById("summaryShipping").textContent = `$${s}`;
-    document.getElementById("summaryTotal").textContent = `$${p + s}`;
+    const total = getProductsTotal();
+    document.getElementById("summaryProducts").textContent = `$${total}`;
+    document.getElementById("summaryTotal").textContent = `$${total}`;
 }
 
 function collectCheckoutData() {
-    const name = document.getElementById("custName").value.trim();
+    const firstName = document.getElementById("custFirstName").value.trim();
+    const lastName = document.getElementById("custLastName").value.trim();
     const email = document.getElementById("custEmail").value.trim();
     const phone = document.getElementById("custPhone").value.trim();
-    if (!name || !email || !phone) { showToast("Please fill in all required fields"); return null; }
+    if (!firstName || !lastName || !email || !phone) { showToast("Please fill in all required fields"); return null; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast("Please enter a valid email"); return null; }
 
-    let address = "Pickup at Crecimiento Hub", city = "", zip = "", province = "";
-    if (selectedDelivery !== "pickup") {
-        address = document.getElementById("custAddress").value.trim();
-        city = document.getElementById("custCity").value.trim();
-        zip = document.getElementById("custZip").value.trim();
-        province = document.getElementById("custProvince").value;
-        if (!address || !city || !zip || !province) { showToast("Please fill in your complete shipping address"); return null; }
-    }
+    const pickupLabel = selectedPickup === "crecimiento" ? "Crecimiento Hub" : "Other Location";
 
     return {
-        name, email, phone, delivery: selectedDelivery,
-        deliveryCost: DELIVERY_COSTS[selectedDelivery], address, city, zip, province,
-        fullAddress: selectedDelivery === "pickup" ? "Pickup at Crecimiento Hub" : `${address}, ${city}, ${province} ${zip}, Argentina`
+        name: `${firstName} ${lastName}`, firstName, lastName,
+        email, phone, pickup: selectedPickup, pickupLabel
     };
 }
-
-document.getElementById("checkoutStripe").addEventListener("click", () => {
-    const data = collectCheckoutData(); if (!data) return;
-    checkoutData = data;
-    sendOrderEmail(data, "Card (Stripe)");
-    closeCheckoutModal();
-    showToast("Stripe integration ready — add your API key to go live!");
-});
 
 document.getElementById("checkoutCrypto").addEventListener("click", () => {
     const data = collectCheckoutData(); if (!data) return;
     checkoutData = data;
+    sendOrderEmail(data, "Crypto (ETH/USDC)");
     closeCheckoutModal(); openCryptoModal();
+});
+
+document.getElementById("checkoutMP").addEventListener("click", () => {
+    const data = collectCheckoutData(); if (!data) return;
+    checkoutData = data;
+    sendOrderEmail(data, "MercadoPago (50/50)");
+    closeCheckoutModal(); openMPModal();
 });
 
 // ===== EMAIL =====
 function sendOrderEmail(customerData, paymentMethod) {
-    const productsTotal = getProductsTotal();
-    const total = productsTotal + customerData.deliveryCost;
+    const total = getProductsTotal();
     const itemsList = cart.map(item =>
         `${item.product.name} (Size: ${item.size}) x${item.qty} — $${item.product.price * item.qty}`
     ).join("\n");
-    const deliveryLabel = { pickup:"Pickup at Crecimiento Hub ($3)", caba:"CABA & GBA ($7)", interior:"Interior Argentina ($12)" }[customerData.delivery];
 
-    const ownerMessage = `NEW ORDER\n\nCustomer: ${customerData.name}\nEmail: ${customerData.email}\nPhone: ${customerData.phone}\nPayment: ${paymentMethod}\n\nITEMS:\n${itemsList}\n\nDelivery: ${deliveryLabel}\nShip to: ${customerData.fullAddress}\n\nProducts: $${productsTotal}\nShipping: $${customerData.deliveryCost}\nTOTAL: $${total} USD`;
-    const buyerMessage = `Hey ${customerData.name}!\n\nWELCOME TO THE BLURRED FAMILY\n\nYour order:\n${itemsList}\n\nDelivery: ${deliveryLabel}\n${customerData.delivery !== 'pickup' ? `Ship to: ${customerData.fullAddress}` : 'Pickup at Crecimiento Hub'}\n\nProducts: $${productsTotal}\nShipping: $${customerData.deliveryCost}\nTOTAL: $${total} USD\n\nPayment: ${paymentMethod}\n\n— Blurred Future Inc.`;
+    const ownerMessage = `NEW ORDER\n\nCustomer: ${customerData.name}\nEmail: ${customerData.email}\nPhone: ${customerData.phone}\nPayment: ${paymentMethod}\nPickup: ${customerData.pickupLabel}\n\nITEMS:\n${itemsList}\n\nTOTAL: $${total} USD`;
+    const buyerMessage = `Hey ${customerData.firstName}!\n\nWELCOME TO THE BLURRED FAMILY\n\nYour order:\n${itemsList}\n\nPickup: ${customerData.pickupLabel}\nTOTAL: $${total} USD\n\nPayment: ${paymentMethod}\n\nWe'll reach out via WhatsApp to coordinate pickup.\n\n— Blurred Future Inc.`;
 
     try {
         if (typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY !== "YOUR_EMAILJS_PUBLIC_KEY") {
-            emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { subject:"NEW ORDER", to_email:OWNER_EMAIL, from_name:customerData.name, message:ownerMessage });
+            emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { subject:"NEW ORDER — BFI", to_email:OWNER_EMAIL, from_name:customerData.name, message:ownerMessage });
             emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { subject:"WELCOME TO THE BLURRED FAMILY", to_email:customerData.email, from_name:"Blurred Future Inc.", message:buyerMessage });
         } else { console.log("EmailJS not configured.", ownerMessage); }
     } catch(err) { console.error("Email error:", err); }
 }
 
 // ===== CRYPTO =====
-let selectedChain = "eth";
-
 function openCryptoModal() {
+    const total = getProductsTotal();
+    document.getElementById("cryptoAmount").textContent = `$${total} USD`;
+    document.getElementById("cryptoAddress").textContent = CRYPTO_WALLET;
     document.getElementById("cryptoModalOverlay").classList.add("open");
     document.body.style.overflow = "hidden";
-    updateCryptoDisplay();
 }
 function closeCryptoModal() {
     document.getElementById("cryptoModalOverlay").classList.remove("open");
     document.body.style.overflow = "";
-    if (checkoutData) sendOrderEmail(checkoutData, `Crypto (${selectedChain.toUpperCase()})`);
 }
 
 document.getElementById("cryptoModalClose").addEventListener("click", closeCryptoModal);
@@ -546,27 +514,30 @@ document.getElementById("cryptoModalOverlay").addEventListener("click", (e) => {
     if (e.target === document.getElementById("cryptoModalOverlay")) closeCryptoModal();
 });
 
-document.querySelectorAll(".crypto-option").forEach(btn => {
-    btn.addEventListener("click", () => {
-        document.querySelectorAll(".crypto-option").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        selectedChain = btn.dataset.chain;
-        updateCryptoDisplay();
-    });
-});
-
-function updateCryptoDisplay() {
-    const total = getProductsTotal() + (checkoutData ? checkoutData.deliveryCost : DELIVERY_COSTS[selectedDelivery]);
-    const rates = { eth:0.014, btc:0.00049, sol:0.24 };
-    const symbols = { eth:"ETH", btc:"BTC", sol:"SOL" };
-    document.getElementById("cryptoAmount").textContent = `${(total * (rates[selectedChain]||0.01)).toFixed(selectedChain==="btc"?6:4)} ${symbols[selectedChain]}`;
-    document.getElementById("cryptoAddress").textContent = CRYPTO_ADDRESSES[selectedChain];
-}
-
 document.getElementById("copyAddress").addEventListener("click", () => {
-    navigator.clipboard.writeText(document.getElementById("cryptoAddress").textContent)
+    navigator.clipboard.writeText(CRYPTO_WALLET)
         .then(() => showToast("Address copied!"))
         .catch(() => showToast("Couldn't copy — select manually"));
+});
+
+// ===== MERCADOPAGO =====
+function openMPModal() {
+    const total = getProductsTotal();
+    const half = Math.ceil(total / 2);
+    document.getElementById("mpTotal").textContent = `$${total}`;
+    document.getElementById("mpHalf").textContent = `$${half}`;
+    document.getElementById("mpPayLink").href = MP_PAYMENT_BASE;
+    document.getElementById("mpModalOverlay").classList.add("open");
+    document.body.style.overflow = "hidden";
+}
+function closeMPModal() {
+    document.getElementById("mpModalOverlay").classList.remove("open");
+    document.body.style.overflow = "";
+}
+
+document.getElementById("mpModalClose").addEventListener("click", closeMPModal);
+document.getElementById("mpModalOverlay").addEventListener("click", (e) => {
+    if (e.target === document.getElementById("mpModalOverlay")) closeMPModal();
 });
 
 // ===== GALLERY LIGHTBOX =====
@@ -610,10 +581,9 @@ document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
         const lightbox = document.querySelector(".gallery-lightbox.open");
         if (lightbox) { lightbox.classList.remove("open"); return; }
-        closeProductModal(); closeCart(); closeCryptoModal(); closeCheckoutModal();
+        closeProductModal(); closeCart(); closeCryptoModal(); closeCheckoutModal(); closeMPModal();
     }
 });
 
 // ===== INIT =====
 renderProducts();
-updateDeliveryUI();

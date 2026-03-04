@@ -732,15 +732,6 @@ nav a:hover {
     transition: all 0.3s ease;
 }
 
-.stripe-btn {
-    background: white;
-    color: black;
-}
-
-.stripe-btn:hover {
-    background: #e0e0e0;
-}
-
 .crypto-btn {
     background: transparent;
     border: 1px solid var(--border);
@@ -750,6 +741,24 @@ nav a:hover {
 .crypto-btn:hover {
     border-color: rgba(255, 255, 255, 0.3);
     background: rgba(255, 255, 255, 0.05);
+}
+
+.mp-btn {
+    background: #00b4d8;
+    color: white;
+}
+
+.mp-btn:hover {
+    background: #0096b7;
+}
+
+.delivery-option.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.delivery-option.disabled .delivery-option-inner {
+    border-color: var(--border);
 }
 
 /* ===== MODALS ===== */
