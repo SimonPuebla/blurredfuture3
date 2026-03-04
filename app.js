@@ -76,8 +76,8 @@ const PRODUCTS = [
 
 const CRYPTO_WALLET = "0x356caBB78b3D6671571528B3aD64A3369eee264c";
 
-// MercadoPago payment link — replace with your actual link from MP dashboard
-const MP_PAYMENT_BASE = "YOUR_MERCADOPAGO_LINK";
+// MercadoPago alias for transfers
+const MP_ALIAS = "techbro";
 
 const EMAILJS_PUBLIC_KEY = "YOUR_EMAILJS_PUBLIC_KEY";
 const EMAILJS_SERVICE_ID = "YOUR_SERVICE_ID";
@@ -642,7 +642,8 @@ function openMPModal() {
     const half = Math.ceil(total / 2);
     document.getElementById("mpTotal").textContent = `$${total}`;
     document.getElementById("mpHalf").textContent = `$${half}`;
-    document.getElementById("mpPayLink").href = MP_PAYMENT_BASE;
+    document.getElementById("mpHalfStep").textContent = `$${half}`;
+    document.getElementById("mpAlias").textContent = MP_ALIAS;
     document.getElementById("mpModalOverlay").classList.add("open");
     document.body.style.overflow = "hidden";
 }
@@ -654,6 +655,12 @@ function closeMPModal() {
 document.getElementById("mpModalClose").addEventListener("click", closeMPModal);
 document.getElementById("mpModalOverlay").addEventListener("click", (e) => {
     if (e.target === document.getElementById("mpModalOverlay")) closeMPModal();
+});
+
+document.getElementById("copyAlias").addEventListener("click", () => {
+    navigator.clipboard.writeText(MP_ALIAS)
+        .then(() => showToast("Alias copied!"))
+        .catch(() => showToast("Couldn't copy — type 'techbro' manually"));
 });
 
 // ===== GALLERY LIGHTBOX =====
